@@ -1,17 +1,28 @@
 defmodule GithubAPI do
   @token System.get_env("GH_TOKEN")
 
-  def get_url(repo, endpoint, options \\ []) do
+  def get(repo, endpoint, options \\ []) do
+    get_url(repo, endpoint, options)
+    |> fetch()
+    |> process_results()
+  end
+
+  defp get_url(repo, endpoint, options) do
     "https://api.github.com/repos/newrelic"
     |> append(repo)
     |> append(endpoint)
     |> append(options)
   end
 
-  def fetch(url) do
+  defp fetch(url) do
     url
     |> call_github(authorization: "token #{@token}")
     |> decode_response()
+  end
+
+  defp process_results({:ok, results}) do
+    results
+    |> Enum.map(fn %{title: title} -> title end)
   end
 
   defp append(base, options) when is_list(options) do
