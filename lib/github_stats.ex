@@ -1,7 +1,7 @@
 defmodule GithubStats do
   # def burndown(repo, milestone, start_date, end_date) do
   def burndown(repo, milestone) do
-    GithubAPI.get(repo, "issues", milestone: milestone)
+    GithubAPI.get(repo, "issues", milestone: milestone, per_page: 2)
   end
 end
 

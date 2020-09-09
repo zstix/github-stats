@@ -22,7 +22,26 @@ defmodule GithubAPI do
 
   defp process_results({:ok, results}) do
     results
-    |> Enum.map(fn %{title: title} -> title end)
+    |> Enum.map(fn %{id: id, title: title, labels: labels} ->
+      %{id: id, title: title, points: get_points(labels)}
+    end)
+  end
+
+  defp get_points(labels \\ []) do
+    labels
+    |> Enum.map(fn %{name: name} -> name end)
+    |> Enum.find(&String.match?(&1, ~r/sp\:[0-9]/))
+    |> case do
+      nil ->
+        0
+
+      name ->
+        name
+        |> String.split(":")
+        |> Enum.reverse()
+        |> hd()
+        |> String.to_integer()
+    end
   end
 
   defp append(base, options) when is_list(options) do
