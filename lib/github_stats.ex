@@ -1,12 +1,22 @@
 defmodule GithubStats do
   import GithubAPI
 
-  def burndown(repo, milestone, start_date, end_date) do
-    # TODO: construct correct URL
-    get_url(repo, "issues")
+  # def burndown(repo, milestone, start_date, end_date) do
+  def burndown(repo) do
+    # TODO: add filters for milestone
+    options = [per_page: 1]
+
+    get_url(repo, "issues", options)
     |> fetch()
+    |> process_results()
 
     # TODO: get stats
+  end
+
+  # TODO clean up and move elsewhere
+  defp process_results({:ok, results}) do
+    results
+    |> Enum.map(fn %{title: title} -> title end)
   end
 end
 
