@@ -1,23 +1,6 @@
 defmodule GithubAPI do
   @token System.get_env("GH_TOKEN")
 
-  # defp get_points(labels) do
-  # labels
-  # |> Enum.map(fn %{name: name} -> name end)
-  # |> Enum.find(&String.match?(&1, ~r/sp\:[0-9]/))
-  # |> case do
-  # nil ->
-  # 0
-
-  # name ->
-  # name
-  # |> String.split(":")
-  # |> Enum.reverse()
-  # |> hd()
-  # |> String.to_integer()
-  # end
-  # end
-
   def query_github({:burndown, vars: vars}) do
     query = """
       query getIssues(
@@ -70,23 +53,25 @@ defmodule GithubAPI do
            }
          }
        }) do
-    %{
-      title: title,
-      points: get_issues(issues)
-    }
+    %{title: title, issues: get_issues(issues)}
   end
 
-  # desired output [{title: "stuff", points: 0,} {}]
-  defp get_issues(issues) do
-    issues
-    |> Map.fetch!("nodes")
-    |> Enum.map(fn %{"labels" => %{"nodes" => nodes}} -> nodes end)
-    |> IO.inspect()
-
-    # |> Enum.map(get_issue)
+  defp get_issues(%{"nodes" => nodes}) do
+    nodes
+    |> Enum.map(&get_issue/1)
   end
 
-  defp get_issue(issue) do
-    IO.inspect(issue)
+  defp get_issue(%{"title" => title, "labels" => labels}) do
+    %{title: title, points: get_points(labels)}
+  end
+
+  defp get_points(%{"nodes" => nodes}) do
+    nodes
+    |> Enum.map(fn %{"name" => name} -> name end)
+    |> Enum.find("sp:0", &String.match?(&1, ~r/sp\:[0-9]/))
+    |> String.split(":")
+    |> Enum.reverse()
+    |> hd()
+    |> String.to_integer()
   end
 end
