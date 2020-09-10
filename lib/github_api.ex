@@ -28,7 +28,7 @@ defmodule GithubAPI do
         repository(name: $repository, owner: $owner) {
           milestone(number: $milestone) {
             title
-            issues(first: 1) {
+            issues(first: 3) {
               nodes {
                 title
                 labels(first: 10) {
@@ -60,8 +60,33 @@ defmodule GithubAPI do
     |> process_response()
   end
 
-  defp process_response(%{"data" => %{"repository" => %{"milestone" => milestone}}}) do
-    milestone
+  defp process_response(%{
+         "data" => %{
+           "repository" => %{
+             "milestone" => %{
+               "issues" => issues,
+               "title" => title
+             }
+           }
+         }
+       }) do
+    %{
+      title: title,
+      points: get_issues(issues)
+    }
+  end
+
+  # desired output [{title: "stuff", points: 0,} {}]
+  defp get_issues(issues) do
+    issues
+    |> Map.fetch!("nodes")
+    |> Enum.map(fn %{"labels" => %{"nodes" => nodes}} -> nodes end)
     |> IO.inspect()
+
+    # |> Enum.map(get_issue)
+  end
+
+  defp get_issue(issue) do
+    IO.inspect(issue)
   end
 end
