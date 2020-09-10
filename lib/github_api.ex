@@ -11,7 +11,7 @@ defmodule GithubAPI do
         repository(name: $repository, owner: $owner) {
           milestone(number: $milestone) {
             title
-            issues(first: 3) {
+            issues(first: 100) {
               nodes {
                 title
                 labels(first: 10) {
