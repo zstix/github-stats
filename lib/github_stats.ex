@@ -1,15 +1,9 @@
 defmodule GithubStats do
-  # TODO: process response
-  # TODO: timeline
   # TODO: map dates to data set
+  # TODO: produce image
   def burndown(repo, milestone) do
-    GithubAPI.query_github({
-      :burndown,
-      vars: %{
-        repository: repo,
-        milestone: milestone
-      }
-    })
+    {:burndown, vars: %{repository: repo, milestone: milestone}}
+    |> GithubAPI.query_github()
   end
 end
 
