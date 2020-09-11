@@ -19,6 +19,15 @@ defmodule GithubAPI do
                     name
                   }
                 }
+                timelineItems(first: 50) {
+                  nodes {
+                    ... on MovedColumnsInProjectEvent {
+                      previousProjectColumnName
+                      projectColumnName
+                      createdAt
+                    }
+                  }
+                }
               }
             }
           }
@@ -31,7 +40,12 @@ defmodule GithubAPI do
 
   def query_github(query, variables) do
     url = "https://api.github.com/graphql"
-    headers = [Authorization: "bearer #{@token}"]
+
+    headers = [
+      Authorization: "bearer #{@token}",
+      Accept: "application/vnd.github.starfox-preview+json"
+    ]
+
     variables = Map.put(variables, "owner", "newrelic")
 
     query
@@ -61,8 +75,12 @@ defmodule GithubAPI do
     |> Enum.map(&get_issue/1)
   end
 
-  defp get_issue(%{"title" => title, "labels" => labels}) do
-    %{title: title, points: get_points(labels)}
+  defp get_issue(%{
+         "title" => title,
+         "labels" => labels,
+         "timelineItems" => timeline
+       }) do
+    %{title: title, points: get_points(labels), history: get_history(timeline)}
   end
 
   defp get_points(%{"nodes" => nodes}) do
@@ -73,5 +91,19 @@ defmodule GithubAPI do
     |> Enum.reverse()
     |> hd()
     |> String.to_integer()
+  end
+
+  defp get_history(%{"nodes" => nodes}) do
+    nodes
+    |> Enum.filter(fn item -> item !== %{} end)
+    |> Enum.map(&format_event/1)
+  end
+
+  defp format_event(%{
+         "createdAt" => date,
+         "previousProjectColumnName" => from,
+         "projectColumnName" => to
+       }) do
+    %{from: from, to: to, date: date}
   end
 end
