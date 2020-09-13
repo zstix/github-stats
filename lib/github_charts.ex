@@ -5,9 +5,17 @@ defmodule GithubCharts do
   @legend_height 60
   @bar_padding 7
 
-  # TODO:abstract
+  @colors %{
+    blue: "#6D9EEB",
+    yellow: "#F9CB9C",
+    green: "#93C47D",
+    gray: "#B7B7B7",
+    red: "#FF6D02",
+    black: "#000000"
+  }
 
-  # TODO: colors
+  # TODO: abstract
+
   # TODO: title
   # TODO: legend
   def draw_chart(%{title: _title, data: data}, :burndown) do
@@ -21,7 +29,7 @@ defmodule GithubCharts do
 
   defp draw_background(chart) do
     chart_bottom = @height - @padding - @legend_height
-    line_style = %{stroke: "black", width: 2}
+    line_style = %{stroke: @colors.black, width: 2}
     line1 = %{x1: @padding, y1: @padding, x2: @padding, y2: chart_bottom}
     line2 = %{x1: @padding, y1: chart_bottom, x2: @width - @padding, y2: chart_bottom}
 
@@ -42,10 +50,10 @@ defmodule GithubCharts do
       chart_max: first.todo + first.in_progress + first.in_review + first.done,
       bar_width: (chart_width - length(data) * @bar_padding * 2) / length(data),
       burndown: [
-        {:todo, "blue"},
-        {:in_review, "yellow"},
-        {:in_progress, "green"},
-        {:done, "grey"}
+        {:todo, @colors.blue},
+        {:in_review, @colors.yellow},
+        {:in_progress, @colors.green},
+        {:done, @colors.gray}
       ]
     }
 
@@ -54,7 +62,6 @@ defmodule GithubCharts do
     |> Enum.reduce(chart, &draw_multi_bar(&2, &1, chart_info))
   end
 
-  # TODO: dates below bars
   defp draw_multi_bar(chart, {data, bar_pos}, info) do
     width = info.bar_width
     x = bar_pos * (width + @bar_padding * 2) + @padding + @bar_padding
