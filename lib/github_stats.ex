@@ -1,9 +1,14 @@
 defmodule GithubStats do
   # TODO: map dates to data set
   # TODO: produce image
-  def burndown(repo, milestone) do
+  def burndown(
+        repo \\ "docs-website",
+        milestone \\ 2,
+        start_date \\ "2020-09-03",
+        end_date \\ "2020-09-18"
+      ) do
     {:burndown, vars: %{repository: repo, milestone: milestone}}
-    |> GithubAPI.query_github()
+    |> GithubAPI.query_github(start_date, end_date)
   end
 end
 
