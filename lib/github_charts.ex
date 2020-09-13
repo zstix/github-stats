@@ -3,7 +3,9 @@ defmodule GithubCharts do
   @height 400
   @padding 40
   @legend_height 60
-  @bar_padding 5
+  @bar_padding 7
+
+  # TODO:abstract
 
   # TODO: colors
   # TODO: title
@@ -12,7 +14,7 @@ defmodule GithubCharts do
     %{width: @width, height: @height}
     |> Victor.new()
     |> draw_background()
-    |> draw_bars(data)
+    |> draw_multi_bars(data)
     |> Victor.get_svg()
     |> Victor.write_file("./chart.svg")
   end
@@ -28,7 +30,7 @@ defmodule GithubCharts do
     |> Victor.add(:line, line2, line_style)
   end
 
-  defp draw_bars(chart, data) do
+  defp draw_multi_bars(chart, data) do
     chart_width = @width - @padding * 2
 
     first = hd(data)
@@ -38,48 +40,49 @@ defmodule GithubCharts do
       chart_height: @height - @legend_height - @padding * 2,
       chart_width: chart_width,
       chart_max: first.todo + first.in_progress + first.in_review + first.done,
-      bar_width: (chart_width - length(data) * @bar_padding * 2) / length(data)
+      bar_width: (chart_width - length(data) * @bar_padding * 2) / length(data),
+      burndown: [
+        {:todo, "blue"},
+        {:in_review, "yellow"},
+        {:in_progress, "green"},
+        {:done, "grey"}
+      ]
     }
 
     data
     |> Enum.with_index()
-    |> Enum.reduce(chart, &draw_bar(&2, &1, chart_info))
+    |> Enum.reduce(chart, &draw_multi_bar(&2, &1, chart_info))
   end
 
-  # TODO: points above bars
   # TODO: dates below bars
-  defp draw_bar(chart, {data, pos}, info) do
+  defp draw_multi_bar(chart, {data, bar_pos}, info) do
     width = info.bar_width
-    x = pos * (width + @bar_padding * 2) + @padding + @bar_padding
+    x = bar_pos * (width + @bar_padding * 2) + @padding + @bar_padding
 
-    todo_height = data.todo / info.chart_max * (info.chart_height - @padding)
-    in_progress_height = data.in_progress / info.chart_max * (info.chart_height - @padding)
-    in_review_height = data.in_review / info.chart_max * (info.chart_height - @padding)
+    info.burndown
+    |> Enum.with_index()
+    |> Enum.map(fn {{key, color}, pos} ->
+      {
+        color,
+        %{
+          x: x,
+          width: width,
+          height: get_height(data, key, info),
+          y:
+            info.burndown
+            |> Enum.take(pos + 1)
+            |> Enum.map(fn {seg_key, _} -> get_height(data, seg_key, info) end)
+            |> Enum.reduce(0, &(&1 + &2))
+            |> (&(info.chart_bottom - &1)).()
+        }
+      }
+    end)
+    |> Enum.reduce(chart, fn {color, bar}, acc ->
+      Victor.add(acc, :rect, bar, %{fill: color})
+    end)
+  end
 
-    todo_bar = %{
-      x: x,
-      y: info.chart_bottom - todo_height,
-      width: width,
-      height: todo_height
-    }
-
-    in_progress_bar = %{
-      x: x,
-      y: info.chart_bottom - todo_height - in_progress_height,
-      width: width,
-      height: in_progress_height
-    }
-
-    in_review_bar = %{
-      x: x,
-      y: info.chart_bottom - todo_height - in_progress_height - in_review_height,
-      width: width,
-      height: in_review_height
-    }
-
-    chart
-    |> Victor.add(:rect, todo_bar, %{fill: "red"})
-    |> Victor.add(:rect, in_progress_bar, %{fill: "orange"})
-    |> Victor.add(:rect, in_review_bar, %{fill: "teal"})
+  defp get_height(data, key, info) do
+    Map.get(data, key) / info.chart_max * (info.chart_height - @padding)
   end
 end
