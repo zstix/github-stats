@@ -3,7 +3,7 @@ defmodule GithubCharts do
   @height 400
   @padding 40
   @legend_height 60
-  @bar_padding 7
+  @bar_padding 9
 
   @colors %{
     blue: "#6D9EEB",
@@ -14,33 +14,12 @@ defmodule GithubCharts do
     black: "#000000"
   }
 
-  # TODO: abstract
-
   # TODO: title
   # TODO: legend
+  # TODO: ideal
+  # TODO: abstract
   def draw_chart(%{title: _title, data: data}, :burndown) do
-    %{width: @width, height: @height}
-    |> Victor.new()
-    |> draw_background()
-    |> draw_multi_bars(data)
-    |> Victor.get_svg()
-    |> Victor.write_file("./chart.svg")
-  end
-
-  defp draw_background(chart) do
-    chart_bottom = @height - @padding - @legend_height
-    line_style = %{stroke: @colors.black, width: 2}
-    line1 = %{x1: @padding, y1: @padding, x2: @padding, y2: chart_bottom}
-    line2 = %{x1: @padding, y1: chart_bottom, x2: @width - @padding, y2: chart_bottom}
-
-    chart
-    |> Victor.add(:line, line1, line_style)
-    |> Victor.add(:line, line2, line_style)
-  end
-
-  defp draw_multi_bars(chart, data) do
     chart_width = @width - @padding * 2
-
     first = hd(data)
 
     chart_info = %{
@@ -57,14 +36,41 @@ defmodule GithubCharts do
       ]
     }
 
+    %{width: @width, height: @height}
+    |> Victor.new()
+    |> draw_multi_bars(data, chart_info)
+    |> draw_background(chart_info)
+    |> Victor.get_svg()
+    |> Victor.write_file("./chart.svg")
+  end
+
+  # TODO: left labels
+  # TODO: title
+  defp draw_background(chart, info) do
+    num_lines = floor(info.chart_max / 10)
+    chart_gap = info.chart_height / ceil(info.chart_max / 10)
+
+    0..num_lines
+    |> Enum.map(fn num -> info.chart_bottom - chart_gap * num end)
+    |> Enum.map(fn y -> %{x1: @padding, y1: y, x2: @width - @padding, y2: y} end)
+    |> Enum.with_index()
+    |> Enum.reduce(chart, fn {line, num}, acc ->
+      case num do
+        0 -> Victor.add(acc, :line, line, %{stroke: @colors.black, width: 2})
+        _ -> Victor.add(acc, :line, line, %{stroke: @colors.gray, width: 2})
+      end
+    end)
+  end
+
+  defp draw_multi_bars(chart, data, info) do
     data
     |> Enum.with_index()
-    |> Enum.reduce(chart, &draw_multi_bar(&2, &1, chart_info))
+    |> Enum.reduce(chart, &draw_multi_bar(&2, &1, info))
   end
 
   defp draw_multi_bar(chart, {data, bar_pos}, info) do
     width = info.bar_width
-    x = bar_pos * (width + @bar_padding * 2) + @padding + @bar_padding
+    x = bar_pos * (width + @bar_padding * 2) + @padding + @bar_padding * 2
 
     info.burndown
     |> Enum.with_index()

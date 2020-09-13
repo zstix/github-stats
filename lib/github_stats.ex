@@ -10,7 +10,7 @@ defmodule GithubStats do
       data: [
         %{date: ~D[2020-05-19], todo: 23, in_progress: 15, in_review: 3, done: 0},
         %{date: ~D[2020-05-20], todo: 23, in_progress: 15, in_review: 3, done: 0},
-        %{date: ~D[2020-05-21], todo: 20, in_progress: 10, in_review: 8, done: 3},
+        %{date: ~D[2020-05-21], todo: 20, in_progress: 9, in_review: 8, done: 4},
         %{date: ~D[2020-05-22], todo: 20, in_progress: 8, in_review: 0, done: 13},
         %{date: ~D[2020-05-26], todo: 20, in_progress: 8, in_review: 0, done: 13},
         %{date: ~D[2020-05-27], todo: 20, in_progress: 8, in_review: 0, done: 13},
