@@ -22,7 +22,8 @@ defmodule GithubStats.MixProject do
   defp deps do
     [
       {:jason, "~> 1.1"},
-      {:neuron, "~> 5.0.0"}
+      {:neuron, "~> 5.0.0"},
+      {:victor, "~> 0.1.0"}
     ]
   end
 end
