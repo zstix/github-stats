@@ -14,6 +14,11 @@ defmodule GithubCharts do
     black: "#000000"
   }
 
+  @text_style %{
+    "font-family": "sans-serif",
+    "font-size": "12px"
+  }
+
   # TODO: title
   # TODO: legend
   # TODO: ideal
@@ -44,22 +49,31 @@ defmodule GithubCharts do
     |> Victor.write_file("./chart.svg")
   end
 
-  # TODO: left labels
-  # TODO: title
   defp draw_background(chart, info) do
-    num_lines = floor(info.chart_max / 10)
-    chart_gap = info.chart_height / ceil(info.chart_max / 10)
+    num_lines = ceil(info.chart_max / 10) + 1
+    chart_gap = info.chart_height / (num_lines - 1)
 
     0..num_lines
     |> Enum.map(fn num -> info.chart_bottom - chart_gap * num end)
     |> Enum.map(fn y -> %{x1: @padding, y1: y, x2: @width - @padding, y2: y} end)
     |> Enum.with_index()
-    |> Enum.reduce(chart, fn {line, num}, acc ->
+    |> Enum.reduce(chart, &draw_background_line/2)
+  end
+
+  defp draw_background_line({line, num}, chart) do
+    line_color =
       case num do
-        0 -> Victor.add(acc, :line, line, %{stroke: @colors.black, width: 2})
-        _ -> Victor.add(acc, :line, line, %{stroke: @colors.gray, width: 2})
+        0 -> @colors.black
+        _ -> @colors.gray
       end
-    end)
+
+    chart
+    |> Victor.add(:line, line, %{stroke: line_color, width: 2})
+    |> Victor.add(
+      :text,
+      %{x: @padding / 2, y: line.y1 + 3, content: "#{num * 10}"},
+      @text_style
+    )
   end
 
   defp draw_multi_bars(chart, data, info) do
@@ -71,6 +85,13 @@ defmodule GithubCharts do
   defp draw_multi_bar(chart, {data, bar_pos}, info) do
     width = info.bar_width
     x = bar_pos * (width + @bar_padding * 2) + @padding + @bar_padding * 2
+
+    label =
+      data.date
+      |> Date.to_string()
+      |> String.split("-")
+      |> Enum.take(-2)
+      |> Enum.join("/")
 
     info.burndown
     |> Enum.with_index()
@@ -93,6 +114,15 @@ defmodule GithubCharts do
     |> Enum.reduce(chart, fn {color, bar}, acc ->
       Victor.add(acc, :rect, bar, %{fill: color})
     end)
+    |> Victor.add(
+      :text,
+      %{
+        x: x,
+        y: info.chart_bottom + 15,
+        content: label
+      },
+      @text_style
+    )
   end
 
   defp get_height(data, key, info) do
