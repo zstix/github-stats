@@ -43,10 +43,25 @@ defmodule GithubCharts do
 
     %{width: @width, height: @height}
     |> Victor.new()
+    |> draw_ideal_line(data, chart_info)
     |> draw_multi_bars(data, chart_info)
     |> draw_background(chart_info)
     |> Victor.get_svg()
     |> Victor.write_file("./chart.svg")
+  end
+
+  defp draw_ideal_line(chart, data, info) do
+    chart
+    |> Victor.add(
+      :line,
+      %{
+        x1: @padding + @bar_padding * 2 + info.bar_width / 2,
+        y1: info.chart_bottom - (info.chart_height - @padding),
+        x2: info.chart_width + @padding - info.bar_width / 2,
+        y2: info.chart_bottom
+      },
+      %{stroke: @colors.red, width: 2}
+    )
   end
 
   defp draw_background(chart, info) do
