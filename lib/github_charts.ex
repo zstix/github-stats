@@ -19,11 +19,8 @@ defmodule GithubCharts do
     "font-size": "12px"
   }
 
-  # TODO: title
-  # TODO: legend
-  # TODO: ideal
   # TODO: abstract
-  def draw_chart(%{title: _title, data: data}, :burndown) do
+  def draw_chart(%{title: title, data: data}, :burndown) do
     chart_width = @width - @padding * 2
     first = hd(data)
 
@@ -46,8 +43,39 @@ defmodule GithubCharts do
     |> draw_ideal_line(chart_info)
     |> draw_multi_bars(data, chart_info)
     |> draw_background(chart_info)
+    |> draw_legend(chart_info, title)
     |> Victor.get_svg()
     |> Victor.write_file("./chart.svg")
+  end
+
+  defp draw_legend(chart, info, title) do
+    size = 15
+    y = info.chart_bottom + @padding / 1.5
+
+    info.burndown
+    |> Enum.with_index()
+    |> Enum.map(fn {item, pos} -> {@padding * 2 + pos * 120, item} end)
+    |> Enum.reduce(chart, fn {x, {key, color}}, acc ->
+      acc
+      |> Victor.add(:rect, %{x: x, y: y, width: size, height: size}, %{fill: color})
+      |> Victor.add(
+        :text,
+        %{x: x + size + 10, y: y + 10, content: key_to_string(key)},
+        @text_style
+      )
+    end)
+    |> Victor.add(
+      :text,
+      %{x: @padding, y: @height - @padding / 1.5, content: title},
+      %{@text_style | "font-size": "18px"}
+    )
+  end
+
+  defp key_to_string(key) do
+    key
+    |> Atom.to_string()
+    |> String.replace("_", " ")
+    |> String.capitalize()
   end
 
   defp draw_ideal_line(chart, info) do
