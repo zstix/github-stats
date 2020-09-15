@@ -1,4 +1,4 @@
-defmodule GithubCharts do
+defmodule GithubStats.Charts do
   @width 600
   @height 400
   @padding 40

@@ -1,4 +1,4 @@
-defmodule GithubAPI do
+defmodule GithubStats.Query do
   @token System.get_env("GH_TOKEN")
 
   def query_github({:burndown, vars: vars}, start_date, end_date) do

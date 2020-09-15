@@ -20,11 +20,11 @@ defmodule GithubStats do
         %{date: ~D[2020-06-02], todo: 0, in_progress: 0, in_review: 0, done: 0}
       ]
     }
-    |> GithubCharts.draw_chart(:burndown)
+    |> GithubStats.Charts.draw_chart(:burndown)
 
     # {:burndown, vars: %{repository: repo, milestone: milestone}}
-    # |> GithubAPI.query_github(start_date, end_date)
-    # |> GithubCharts.draw_chart(:burndown)
+    # |> GithubStats.Query.query_github(start_date, end_date)
+    # |> GithubStats.Charts.draw_chart(:burndown)
   end
 end
 
