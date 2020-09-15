@@ -45,7 +45,8 @@ defmodule GithubStats.Charts do
     |> draw_background(chart_info)
     |> draw_legend(chart_info, title)
     |> Victor.get_svg()
-    |> Victor.write_file("./chart.svg")
+
+    # |> Victor.write_file("./chart.svg")
   end
 
   defp draw_legend(chart, info, title) do
