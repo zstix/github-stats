@@ -11,7 +11,7 @@ defmodule GithubStats.Router do
     conn
     |> get_missing_params(["repo", "milestone", "start_date", "end_date"])
     |> case do
-      "" ->
+      [] ->
         conn
         |> put_resp_content_type("image/svg+xml")
         |> send_resp(200, get_resp({:burndown, conn.query_params}))
@@ -19,7 +19,7 @@ defmodule GithubStats.Router do
       missing ->
         conn
         |> put_resp_content_type("text/plain")
-        |> send_resp(400, "Missing: #{missing}")
+        |> send_resp(400, "Missing: #{Enum.join(missing, ", ")}")
     end
   end
 
@@ -30,7 +30,6 @@ defmodule GithubStats.Router do
   defp get_missing_params(conn, keys) do
     keys
     |> Enum.filter(&(!Map.has_key?(conn.query_params, &1)))
-    |> Enum.join(", ")
   end
 
   defp get_resp({:burndown, params}) do
