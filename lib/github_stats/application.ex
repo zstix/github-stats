@@ -3,10 +3,15 @@ defmodule GithubStats.Application do
 
   use Application
 
+  # test run with `mix run --no-halt`
   def start(_type, _args) do
+    port = 4000
+
     children = [
-      {Plug.Cowboy, scheme: :http, plug: GithubStats.Router, options: [port: 4000]}
+      {Plug.Cowboy, scheme: :http, plug: GithubStats.Router, options: [port: port]}
     ]
+
+    IO.puts("Starting server on port #{port}")
 
     opts = [strategy: :one_for_one, name: GithubStats.Supervisor]
     Supervisor.start_link(children, opts)
