@@ -21,15 +21,21 @@ defmodule GithubStats.Charts do
 
   # TODO: abstract
   def draw_chart(%{title: title, data: data}, :burndown) do
-    chart_width = @width - @padding * 2
     first = hd(data)
+    chart_width = @width - @padding * 2
+    chart_height = @height - @legend_height - @padding * 2
+    chart_max = first.todo + first.in_progress + first.in_review + first.done
+    num_lines = ceil(chart_max / 10)
+    chart_gap = chart_height / num_lines
 
     chart_info = %{
       chart_bottom: @height - @padding - @legend_height,
-      chart_height: @height - @legend_height - @padding * 2,
+      chart_height: chart_height,
       chart_width: chart_width,
-      chart_max: first.todo + first.in_progress + first.in_review + first.done,
+      chart_max: chart_max,
       bar_width: (chart_width - length(data) * @bar_padding * 2) / length(data),
+      num_lines: num_lines,
+      chart_gap: chart_gap,
       burndown: [
         {:todo, @colors.blue},
         {:in_review, @colors.yellow},
@@ -45,8 +51,6 @@ defmodule GithubStats.Charts do
     |> draw_background(chart_info)
     |> draw_legend(chart_info, title)
     |> Victor.get_svg()
-
-    # |> Victor.write_file("./chart.svg")
   end
 
   defp draw_legend(chart, info, title) do
@@ -94,22 +98,15 @@ defmodule GithubStats.Charts do
   end
 
   defp draw_background(chart, info) do
-    num_lines = ceil(info.chart_max / 10) + 1
-    chart_gap = info.chart_height / (num_lines - 1)
-
-    0..num_lines
-    |> Enum.map(fn num -> info.chart_bottom - chart_gap * num end)
+    0..info.num_lines
+    |> Enum.map(fn num -> info.chart_bottom - info.chart_gap * num end)
     |> Enum.map(fn y -> %{x1: @padding, y1: y, x2: @width - @padding, y2: y} end)
     |> Enum.with_index()
     |> Enum.reduce(chart, &draw_background_line/2)
   end
 
   defp draw_background_line({line, num}, chart) do
-    line_color =
-      case num do
-        0 -> @colors.black
-        _ -> @colors.gray
-      end
+    line_color = (num == 0 && @colors.black) || @colors.gray
 
     chart
     |> Victor.add(:line, line, %{stroke: line_color, "stroke-width": 1})
@@ -170,6 +167,6 @@ defmodule GithubStats.Charts do
   end
 
   defp get_height(data, key, info) do
-    Map.get(data, key) / info.chart_max * (info.chart_height - @padding)
+    Map.get(data, key) / 10 * info.chart_gap
   end
 end
