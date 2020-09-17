@@ -68,7 +68,7 @@ defmodule GithubStats.Query do
            }
          }
        }) do
-    %{title: title, issues: get_issues(issues)}
+    %{title: String.replace(title, "&", "and"), issues: get_issues(issues)}
   end
 
   defp get_issues(%{"nodes" => nodes}) do
@@ -81,7 +81,11 @@ defmodule GithubStats.Query do
          "labels" => labels,
          "timelineItems" => timeline
        }) do
-    %{title: title, points: get_points(labels), history: get_history(timeline)}
+    %{
+      title: String.replace(title, "&", "and"),
+      points: get_points(labels),
+      history: get_history(timeline)
+    }
   end
 
   defp get_points(%{"nodes" => nodes}) do
