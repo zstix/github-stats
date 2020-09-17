@@ -3,7 +3,7 @@ defmodule GithubStats.Application do
 
   use Application
 
-  # test run with `mix run --no-halt`
+  # run with `mix run --no-halt`
   def start(_type, _args) do
     port = 4000
 

@@ -120,7 +120,7 @@ defmodule GithubStats.Query do
         |> Enum.map(&get_stats_for_date(&1, milestone.issues))
         |> Enum.map(fn %{date: date} = data ->
           case Date.compare(date, Date.utc_today()) do
-            :gt -> %{data | date: date, todo: 0}
+            :gt -> %{date: date, todo: 0, in_progress: 0, in_review: 0, done: 0}
             _ -> data
           end
         end)
@@ -136,35 +136,35 @@ defmodule GithubStats.Query do
     |> Map.merge(%{date: date})
   end
 
-  defp get_stats_for_date(%{history: [], points: points}, _date, stats) do
-    %{stats | todo: stats.todo + points}
-  end
+  defp get_stats_for_date(%{history: []}, _date, stats), do: stats
 
   defp get_stats_for_date(%{history: history, points: points}, date, stats) do
     history
-    |> Enum.map(fn %{date: date, to: to} -> %{date: get_date(date), to: to} end)
-    |> Enum.filter(fn %{date: idate} -> Date.compare(idate, date) != :lt end)
+    |> Enum.map(fn %{date: idate, to: to} -> %{date: string_to_date(idate), to: to} end)
+    |> Enum.filter(&filter_out_dates(:before, &1, date))
     |> case do
       [] ->
         %{stats | todo: stats.todo + points}
 
       events ->
         events
-        |> Enum.reduce(hd(events), fn
-          %{date: idate} = event, _acc when idate == date -> event
-          _event, acc -> acc
-        end)
+        |> Enum.reverse()
+        |> hd()
         |> Map.get(:to)
         |> case do
           "In progress" -> %{stats | in_progress: stats.in_progress + points}
           "In review" -> %{stats | in_review: stats.in_review + points}
           "Done" -> %{stats | done: stats.done + points}
-          _ -> %{stats | todo: stats.todo + points}
+          _ -> stats
         end
     end
   end
 
-  defp get_date(date) do
+  defp filter_out_dates(:before, %{date: item_date}, date) do
+    Date.compare(item_date, date) == :lt
+  end
+
+  defp string_to_date(date) do
     date
     |> String.replace(~r/T.*/, "")
     |> Date.from_iso8601!()
