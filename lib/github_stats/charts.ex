@@ -89,7 +89,7 @@ defmodule GithubStats.Charts do
       :line,
       %{
         x1: @padding + @bar_padding * 2 + info.bar_width / 2,
-        y1: info.chart_bottom - (info.chart_height - @padding),
+        y1: info.chart_bottom - info.chart_max / 10 * info.chart_gap,
         x2: info.chart_width + @padding - info.bar_width / 2,
         y2: info.chart_bottom
       },
